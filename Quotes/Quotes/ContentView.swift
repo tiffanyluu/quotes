@@ -1,14 +1,18 @@
 import SwiftUI
+import WidgetKit
 
 struct ContentView: View {
     
     @State private var randomQuote: String = "Tap for a quote"
     @State private var author: String = ""
     
+    let appGroup = "group.com.tiffanyluu.QuotesApp"
+    
     var body: some View {
         ZStack {
             Color(Color(red: 214/255, green: 207/255, blue: 159/255))
                 .ignoresSafeArea()
+                
             VStack(alignment: .center) {
                 Spacer()
                 Text(randomQuote)
@@ -54,12 +58,19 @@ struct ContentView: View {
                     }
                     
                     Button(action: {
-                        //randomQuote = quotes.randomElement()!
                         Task {
                             do {
                                 let quote = try await fetchRandomQuote()
                                 randomQuote = quote.text
                                 author = quote.author
+                                
+                                if let sharedDefaults = UserDefaults(suiteName: appGroup) {
+                                    sharedDefaults.set(quote.text, forKey: "sharedQuote")
+                                    sharedDefaults.set(quote.author, forKey: "sharedAuthor")
+                                    sharedDefaults.synchronize()
+                                }
+                                WidgetCenter.shared.reloadAllTimelines()
+                                
                             } catch {
                                 print("Error fetching quote: \(error)")
                                 randomQuote = "Failed to fetch quote"
@@ -87,7 +98,7 @@ struct ContentView: View {
         }
     }
 }
-
-#Preview {
-    ContentView()
-}
+//
+//#Preview {
+//    ContentView()
+//}
